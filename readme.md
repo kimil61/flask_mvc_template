@@ -1,6 +1,4 @@
-
 # Flask MVC Web Application
-Flask 를 이용한 mvc 웹프레임워크 샘플입니다.
 
 ## 프로젝트 구조
 
@@ -83,18 +81,17 @@ flask db upgrade
 
 ### 1. 모델 정의
 
-새로운 모델을 추가하려면 `app/models/models.py` 파일에 클래스를 정의하세요. 예를 들어, `Comment` 모델을 추가하려면:
+새로운 모델을 추가하려면 `app/models/models.py` 파일에 클래스를 정의하세요. 예를 들어, `Tag` 모델을 추가하려면:
 
 ```python
-class Comment(db.Model):
-    __tablename__ = 'comments'  # 테이블 이름을 명시적으로 지정
+class Tag(db.Model):
+    __tablename__ = 'tags'  # 테이블 이름을 명시적으로 지정
     id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.Text)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    name = db.Column(db.String(64), unique=True, nullable=False)
     post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
 
     def __repr__(self):
-        return f'<Comment {self.content[:20]}>'
+        return f'<Tag {self.name}>'
 ```
 
 ### 2. 마이그레이션 생성 및 적용
@@ -102,7 +99,7 @@ class Comment(db.Model):
 모델을 정의한 후에는 데이터베이스에 해당 변경 사항을 반영해야 합니다:
 
 ```bash
-flask db migrate -m "Added Comment model"
+flask db migrate -m "Added Tag model"
 flask db upgrade
 ```
 
@@ -110,91 +107,88 @@ flask db upgrade
 
 ### 3. 컨트롤러 및 템플릿 추가 (선택 사항)
 
-새로운 모델을 추가하고, 이를 처리하거나 사용자에게 보여주기 위해서는 새로운 컨트롤러와 템플릿을 추가해야 할 수 있습니다. 여기서는 `Comment` 모델을 예시로 설명하겠습니다.
+새로운 모델을 추가하고, 이를 처리하거나 사용자에게 보여주기 위해서는 새로운 컨트롤러와 템플릿을 추가해야 할 수 있습니다. 여기서는 `Tag` 모델을 예시로 설명하겠습니다.
 
 #### 1. 컨트롤러 추가
 
 컨트롤러는 특정 URL에 대해 애플리케이션이 어떻게 응답할지를 정의합니다. 새로운 모델에 대한 컨트롤러를 추가하려면, `app/controllers` 디렉터리 내에 새로운 파일을 만들거나 기존 컨트롤러에 해당 로직을 추가합니다.
 
-예를 들어, `comments_controller.py`라는 파일을 추가해보겠습니다:
+예를 들어, `tags_controller.py`라는 파일을 추가해보겠습니다:
 
 ```python
-# app/controllers/comments_controller.py
+# app/controllers/tags_controller.py
 
 from flask import render_template, request, redirect, url_for
 from app import app, db
-from app.models.models import Comment
+from app.models.models import Tag
 
-@app.route('/comments', methods=['GET'])
-def comments():
-    all_comments = Comment.query.all()
-    return render_template('comments.html', comments=all_comments)
+@app.route('/tags', methods=['GET'])
+def tags():
+    all_tags = Tag.query.all()
+    return render_template('tags.html', tags=all_tags)
 
-@app.route('/comments/add', methods=['POST'])
-def add_comment():
-    content = request.form['content']
-    user_id = request.form['user_id']
+@app.route('/tags/add', methods=['POST'])
+def add_tag():
+    name = request.form['name']
     post_id = request.form['post_id']
     
-    new_comment = Comment(content=content, user_id=user_id, post_id=post_id)
-    db.session.add(new_comment)
+    new_tag = Tag(name=name, post_id=post_id)
+    db.session.add(new_tag)
     db.session.commit()
     
-    return redirect(url_for('comments'))
+    return redirect(url_for('tags'))
 ```
 
 이 컨트롤러는 두 가지 주요 기능을 담당합니다:
 
-- **`/comments` (GET)**: 모든 댓글을 조회하여 `comments.html` 템플릿에 전달합니다.
-- **`/comments/add` (POST)**: 새로운 댓글을 데이터베이스에 추가한 후, 댓글 목록 페이지로 리디렉션합니다.
+- **`/tags` (GET)**: 모든 태그를 조회하여 `tags.html` 템플릿에 전달합니다.
+- **`/tags/add` (POST)**: 새로운 태그를 데이터베이스에 추가한 후, 태그 목록 페이지로 리디렉션합니다.
 
 #### 2. 템플릿 추가
 
-새로운 컨트롤러에서 렌더링할 템플릿 파일을 `app/templates` 디렉터리에 추가해야 합니다. 예를 들어, `comments.html`이라는 파일을 추가해보겠습니다:
+새로운 컨트롤러에서 렌더링할 템플릿 파일을 `app/templates` 디렉터리에 추가해야 합니다. 예를 들어, `tags.html`이라는 파일을 추가해보겠습니다:
 
 ```html
-<!-- app/templates/comments.html -->
+<!-- app/templates/tags.html -->
 
 {% extends 'layout.html' %}
 
 {% block content %}
-    <h2>Comments</h2>
+    <h2>Tags</h2>
     <ul>
-        {% for comment in comments %}
+        {% for tag in tags %}
             <li>
-                <strong>Comment:</strong> {{ comment.content }}<br>
-                <em>By User ID:</em> {{ comment.user_id }} on Post ID: {{ comment.post_id }}
+                <strong>Tag:</strong> {{ tag.name }}<br>
+                <em>Post ID:</em> {{ tag.post_id }}
             </li>
         {% endfor %}
     </ul>
 
-    <h3>Add a new comment</h3>
-    <form action="{{ url_for('add_comment') }}" method="post">
-        <label for="content">Content:</label><br>
-        <textarea name="content" id="content"></textarea><br>
-        <label for="user_id">User ID:</label><br>
-        <input type="number" name="user_id" id="user_id"><br>
+    <h3>Add a new tag</h3>
+    <form action="{{ url_for('add_tag') }}" method="post">
+        <label for="name">Tag Name:</label><br>
+        <input type="text" name="name" id="name"><br>
         <label for="post_id">Post ID:</label><br>
         <input type="number" name="post_id" id="post_id"><br>
-        <input type="submit" value="Add Comment">
+        <input type="submit" value="Add Tag">
     </form>
 {% endblock %}
 ```
 
 이 템플릿은 다음을 수행합니다:
 
-- **댓글 목록**: 데이터베이스에서 가져온 댓글을 목록으로 표시합니다.
-- **댓글 추가 폼**: 사용자로부터 새로운 댓글을 입력받아 `/comments/add` 경로로 POST 요청을 보냅니다.
+- **태그 목록**: 데이터베이스에서 가져온 태그를 목록으로 표시합니다.
+- **태그 추가 폼**: 사용자로부터 새로운 태그를 입력받아 `/tags/add` 경로로 POST 요청을 보냅니다.
 
 #### 3. 컨트롤러를 `__init__.py`에 등록
 
 새로 만든 컨트롤러를 애플리케이션에서 사용할 수 있도록 `app/__init__.py` 파일에 등록해야 합니다.
 
 ```python
-from app.controllers import comments_controller
+from app.controllers import common_controller, users_controller, posts_controller, tags_controller
 ```
 
-이렇게 하면 애플리케이션이 실행될 때 `comments_controller.py`에 정의된 라우트들이 포함됩니다.
+이렇게 하면 애플리케이션이 실행될 때 `tags_controller.py`에 정의된 라우트들이 포함됩니다.
 
 ---
 
@@ -205,3 +199,4 @@ from app.controllers import comments_controller
 - **컨트롤러 등록**: 새로운 컨트롤러 파일을 `app/__init__.py`에 등록하여 애플리케이션이 이를 인식하고 사용할 수 있게 합니다.
 
 이 과정을 통해 새로운 모델과 상호작용할 수 있는 기능을 추가하고, 이를 사용자 인터페이스에 반영할 수 있습니다.
+
