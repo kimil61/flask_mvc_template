@@ -1,5 +1,6 @@
 
 # Flask MVC Web Application
+Flask 를 이용한 mvc 웹프레임워크 샘플입니다.
 
 ## 프로젝트 구조
 
