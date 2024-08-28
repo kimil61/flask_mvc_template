@@ -13,3 +13,4 @@ from app.models import models
 from app.controllers import common_controller
 from app.controllers import users_controller
 from app.controllers import posts_controller
+from app.controllers import tags_controller
