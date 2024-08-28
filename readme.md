@@ -79,37 +79,7 @@ flask db upgrade
 
 ## 새로운 모델 추가 시
 
-### 1. 모델 정의
-
-새로운 모델을 추가하려면 `app/models/models.py` 파일에 클래스를 정의하세요. 예를 들어, `Tag` 모델을 추가하려면:
-
-```python
-class Tag(db.Model):
-    __tablename__ = 'tags'  # 테이블 이름을 명시적으로 지정
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), unique=True, nullable=False)
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'))
-
-    def __repr__(self):
-        return f'<Tag {self.name}>'
-```
-
-### 2. 마이그레이션 생성 및 적용
-
-모델을 정의한 후에는 데이터베이스에 해당 변경 사항을 반영해야 합니다:
-
-```bash
-flask db migrate -m "Added Tag model"
-flask db upgrade
-```
-
-이 명령어를 통해 새로운 테이블이 생성되고, 데이터베이스 스키마가 최신 상태로 유지됩니다.
-
-### 3. 컨트롤러 및 템플릿 추가 (선택 사항)
-
-새로운 모델을 추가하고, 이를 처리하거나 사용자에게 보여주기 위해서는 새로운 컨트롤러와 템플릿을 추가해야 할 수 있습니다. 여기서는 다대다 관계인 `Tag` 모델을 예시로 설명하겠습니다.
-
-#### 1. `models.py` 파일에 `Tag` 모델 추가
+### 1. models.py 파일에 Tag 모델 추가
 
 ```python
 from app import db
@@ -141,7 +111,7 @@ class Tag(db.Model):
         return f'<Tag {self.name}>'
 ```
 
-##### 코드 설명
+#### 코드설명
 
 - **`post_tag` 중간 테이블**: 이 테이블은 `post_id`와 `tag_id`를 포함하며, `Post`와 `Tag` 모델 간의 다대다 관계를 관리합니다.
   
@@ -152,6 +122,19 @@ class Tag(db.Model):
 - **`Tag` 모델**: 
   - `name` 필드는 태그의 이름을 나타내며, 고유(unique)하고 비어 있을 수 없습니다(nullable=False).
   - `Tag` 모델은 여러 `Post`와 연결될 수 있습니다.
+
+### 2. 마이그레이션 생성 및 적용
+
+모델을 정의한 후에는 데이터베이스에 해당 변경 사항을 반영해야 합니다:
+
+```bash
+flask db migrate -m "Added Tag model"
+flask db upgrade
+```
+
+이 명령어를 통해 새로운 테이블이 생성되고, 데이터베이스 스키마가 최신 상태로 유지됩니다.
+
+### 3. 컨트롤러 및 템플릿 추가
 
 #### 1. 컨트롤러 추가
 
